@@ -20,8 +20,8 @@
 */
 
 
-define('QA_VERSION', '1.8.0-beta2'); // also used as suffix for .js and .css requests
-define('QA_BUILD_DATE', '2017-12-23');
+define('QA_VERSION', '1.8.0'); // also used as suffix for .js and .css requests
+define('QA_BUILD_DATE', '2018-01-30');
 
 
 /**
@@ -41,9 +41,14 @@ function qa_autoload($class)
 {
 	if (strpos($class, 'Q2A_') === 0)
 		require QA_INCLUDE_DIR . strtr($class, '_', '/') . '.php';
+
+	if (strpos($class, 'Q2A\\') === 0) {
+		require QA_BASE_DIR . 'qa-src/' . strtr(substr($class, 4), '\\', '/') . '.php';
+	}
 }
 spl_autoload_register('qa_autoload');
 
+use Q2A\App\Application;
 
 // Execution section of this file - remainder contains function definitions
 
@@ -57,7 +62,6 @@ if (defined('QA_WORDPRESS_LOAD_FILE')) {
 	// if relevant, load Joomla JConfig class into global scope
 	require_once QA_JOOMLA_LOAD_FILE;
 }
-
 
 qa_initialize_constants_2();
 qa_initialize_modularity();
@@ -896,7 +900,7 @@ function qa_list_modules($type)
  * Return an array containing information about the module of $type named $name
  * @param $type
  * @param $name
- * @return
+ * @return array
  */
 function qa_get_module_info($type, $name)
 {
@@ -1839,6 +1843,36 @@ function qa_retrieve_url($url)
 
 
 /**
+ * Helper function to access the Application object.
+ * @return Application
+ */
+function qa_app()
+{
+	return Application::getInstance();
+}
+
+
+/**
+ * Helper function to access services in the Container.
+ * If the $key parameter is set and the $object parameter is null the container is called to resolve the $key.
+ * If the $key and the $object parameters are null the container is called to bind the $object to the $key.
+ * @param mixed $key Identifier for the object to get/set.
+ * @param mixed $object Object to set in the $key (if null, a stored object is returned)
+ * @return mixed
+ */
+function qa_service($key, $object = null)
+{
+	$app = Application::getInstance();
+
+	if ($object === null) {
+		return $app->getContainer()->get($key);
+	}
+
+	$app->getContainer()->set($key, $object);
+}
+
+
+/**
  * Shortcut to get or set an option value without specifying database
  * @param $name
  * @param mixed $value
@@ -1868,7 +1902,7 @@ function qa_opt($name, $value = null)
 function qa_debug($var)
 {
 	echo "\n" . '<pre style="padding: 10px; background-color: #eee; color: #444; font-size: 11px; text-align: left">';
-	echo $var === null ? 'NULL' : print_r($var, true);
+	echo $var === null ? 'NULL' : htmlspecialchars(print_r($var, true), ENT_COMPAT|ENT_SUBSTITUTE);
 	echo '</pre>' . "\n";
 }
 
