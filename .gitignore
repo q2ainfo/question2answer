@@ -1,5 +1,9 @@
-# Ignore config file in development
-qa-config.php
+# Ignore Q2A config file and .htaccess in development
+/qa-config.php
+/.htaccess
+
+# Ignore cached files
+/qa-cache/*/
 
 # Other files
 .DS_Store
@@ -9,5 +13,4 @@ qa-config.php
 .Trashes
 ehthumbs.db
 Thumbs.db
-
 .idea/
